@@ -6,8 +6,18 @@ class MoviesController < ApplicationController
     # will render app/views/movies/show.<extension> by default
   end
 
-  def index
-    @movies = Movie.all
+  def index 
+    if params[:sort_by].nil?
+      @movies = Movie.all
+    else
+      @sort_by = params[:sort_by]
+      begin
+        @movies = Movie.order("#{@sort_by} ASC").all
+      rescue ActiveRecord::StatementInvalid
+        flash[:warning] = "Movies cannot be sorted by this order"
+        @movies = Movie.all
+      end
+    end
   end
 
   def new
