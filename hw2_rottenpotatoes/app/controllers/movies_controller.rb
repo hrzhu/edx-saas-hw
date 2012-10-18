@@ -9,26 +9,31 @@ class MoviesController < ApplicationController
   def index
     @all_ratings = Movie.all_ratings
     @selected_ratings = @all_ratings if @selected_ratings.nil?
-    if params[:sort_by].nil? and params[:ratings].nil?
-      @movies = Movie.all
+    if session[:sort_by] != params[:sort_by] and !params[:sort_by].nil?
+      session[:sort_by] = params[:sort_by]
+    end
+    if session[:ratings] != params[:ratings] and !params[:ratings].nil?
+      session[:ratings] = params[:ratings]
+    end
+    if params[:sort_by].nil? && params[:ratings].nil? && (!session[:sort_by].nil? || !session[:ratings].nil?)
+      redirect_to movies_path(:sort_by => session[:sort_by], :ratings => session[:ratings])
+    end
+    @sort_by = session[:sort_by]
+    @ratings = session[:ratings]
+    if session[:ratings].nil?
+      ratings = Movie.all_ratings
     else
-      @sort_by = params[:sort_by]
-      @ratings = params[:ratings]
-      if params[:ratings].nil?
-        ratings = Movie.all_ratings
-      else
-        ratings = @ratings.keys
-      end
-      @selected_ratings = ratings
-      if @sort_by.nil?
+      ratings = @ratings.keys
+    end
+    @selected_ratings = ratings
+    if @sort_by.nil?
+      @movies = Movie.find_all_by_rating(ratings)
+    else
+      begin
+        @movies = Movie.order("#{@sort_by} ASC").find_all_by_rating(ratings)
+      rescue ActiveRecord::StatementInvalid
+        flash[:warning] = "Movies cannot be sorted by this order"
         @movies = Movie.find_all_by_rating(ratings)
-      else
-        begin
-          @movies = Movie.order("#{@sort_by} ASC").find_all_by_rating(ratings)
-        rescue ActiveRecord::StatementInvalid
-          flash[:warning] = "Movies cannot be sorted by this order"
-          @movies = Movie.find_all_by_rating(ratings)
-        end
       end
     end
   end
