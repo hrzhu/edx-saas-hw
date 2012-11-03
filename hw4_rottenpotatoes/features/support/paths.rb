@@ -16,6 +16,11 @@ module NavigationHelpers
     when /^the home\s?page$/
       '/'
 
+    when /^the edit page for "(.*)"$/ then
+      page_name =~ /^the edit page for "(.*)"$/
+      movie = Movie.find_by_title $1
+      edit_movie_path movie
+
     # Add more mappings here.
     # Here is an example that pulls values out of the Regexp:
     #
